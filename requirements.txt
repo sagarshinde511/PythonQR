@@ -2,5 +2,3 @@ streamlit
 opencv-python-headless
 pyzbar
 Pillow
-libgl1
-libglib2.0-0
