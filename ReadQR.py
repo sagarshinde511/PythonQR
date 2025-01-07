@@ -5,7 +5,7 @@ from PIL import Image
 
 def read_qr_code_from_camera():
     # Open the laptop's default camera
-    camera = st.camera_input()
+    camera = st.camera_input(0)
 
     if not camera.isOpened():
         st.error("Error: Could not access the camera.")
