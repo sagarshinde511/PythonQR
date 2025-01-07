@@ -1,4 +1,4 @@
 streamlit
-cv2
-PIL
+opencv-python
 pyzbar
+Pillow
