@@ -1,5 +1,5 @@
 import cv2
-from pyzbar.pyzbar import decode
+from pyzbar import decode
 import streamlit as st
 from PIL import Image
 
