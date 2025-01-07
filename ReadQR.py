@@ -1,58 +1,46 @@
 import cv2
-from pyzbar.pyzbar import decode
+import qrcode
 import streamlit as st
 from PIL import Image
 
-def main():
-    st.title("QR Code Scanner")
-    st.write("Scan QR codes using your laptop's camera.")
+def read_qr_code_from_camera():
+    # Open the laptop's default camera
+    camera = cv2.VideoCapture(0)
 
-    # Start or stop the camera
-    start_camera = st.checkbox("Start Camera")
-    qr_code_result = st.empty()  # Placeholder for displaying QR code results
+    if not camera.isOpened():
+        st.error("Error: Could not access the camera.")
+        return
 
-    if start_camera:
-        # Open the camera
-        camera = cv2.VideoCapture(0)
-        if not camera.isOpened():
-            st.error("Error: Could not access the camera.")
-            return
+    st.write("Scanning for QR codes. Press 'q' to quit.")
+    while True:
+        # Capture frame-by-frame
+        ret, frame = camera.read()
+        if not ret:
+            st.error("Error: Failed to capture frame.")
+            break
 
-        st.write("Scanning for QR codes. Uncheck the 'Start Camera' box to stop.")
-        
-        # Stream video frames
-        while start_camera:
-            ret, frame = camera.read()
-            if not ret:
-                st.error("Error: Failed to capture frame.")
-                break
+        # Decode QR codes using OpenCV
+        qr_detector = cv2.QRCodeDetector()
+        value, pts, _ = qr_detector(frame)
 
-            # Decode QR codes
-            decoded_objects = decode(frame)
-            for obj in decoded_objects:
-                qr_text = obj.data.decode('utf-8')
-                qr_code_result.success(f"QR Code Detected: {qr_text}")
+        if value:
+            st.write(f"QR Code Detected: {value}")
+            pts = pts.astype(int)
+            # Draw a rectangle around the QR code
+            for i in range(4):
+                cv2.line(frame, tuple(pts[i]), tuple(pts[(i + 1) % 4]), (0, 255, 0), 3)
 
-                # Draw a rectangle around the QR code
-                points = obj.polygon
-                if len(points) > 4:
-                    hull = cv2.convexHull(points)
-                    points = hull
+        # Convert the frame to a format suitable for Streamlit display
+        img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(img)
+        st.image(img, channels="RGB")
 
-                n = len(points)
-                for j in range(n):
-                    cv2.line(frame, tuple(points[j]), tuple(points[(j + 1) % n]), (0, 255, 0), 3)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
-            # Convert the frame to RGB (for displaying in Streamlit)
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            # Display the frame in Streamlit
-            frame_placeholder = st.image(frame_rgb, channels="RGB")
-
-            # Update the checkbox state
-            start_camera = st.checkbox("Start Camera", value=True)
-
-        # Release the camera
-        camera.release()
+    # Release the camera and close the window
+    camera.release()
+    cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    main()
+    read_qr_code_from_camera()
