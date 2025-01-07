@@ -6,10 +6,6 @@ def read_qr_code_from_camera():
     # Open the laptop's default camera
     camera = st.camera_input("Take a picture")
 
-    if not camera.isOpened():
-        st.error("Error: Could not access the camera.")
-        return
-
     st.write("Scanning for QR codes. Press 'q' to quit.")
     while True:
         # Capture frame-by-frame
