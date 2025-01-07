@@ -1,41 +1,37 @@
-import cv2
 import streamlit as st
+import cv2
 from PIL import Image
+import numpy as np
 
 def read_qr_code_from_camera():
-    # Open the laptop's default camera
-    camera = st.camera_input("Take a picture")
+    st.title("QR Code Scanner")
 
-    st.write("Scanning for QR codes. Press 'q' to quit.")
-    while True:
-        # Capture frame-by-frame
-        ret, frame = camera.read()
-        if not ret:
-            st.error("Error: Failed to capture frame.")
-            break
+    # Use Streamlit's camera input
+    camera_image = st.camera_input("Take a picture to scan for QR codes")
+
+    if camera_image:
+        # Convert the captured image to OpenCV format
+        image = Image.open(camera_image)
+        frame = np.array(image)
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
         # Decode QR codes in the frame using OpenCV's QRCodeDetector
         qr_detector = cv2.QRCodeDetector()
-        value, pts, _ = qr_detector(frame)
+        value, points, _ = qr_detector.detectAndDecode(frame)
 
         if value:
-            st.write(f"QR Code Detected: {value}")
-            pts = pts.astype(int)
-            # Draw a rectangle around the QR code
-            for i in range(4):
-                cv2.line(frame, tuple(pts[i]), tuple(pts[(i + 1) % 4]), (0, 255, 0), 3)
+            st.success(f"QR Code Detected: {value}")
+            if points is not None:
+                # Draw a rectangle around the QR code
+                points = points[0].astype(int)
+                for i in range(4):
+                    cv2.line(frame, tuple(points[i]), tuple(points[(i + 1) % 4]), (0, 255, 0), 3)
+        else:
+            st.warning("No QR Code detected.")
 
-        # Convert the frame to a format suitable for Streamlit display
-        img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        img = Image.fromarray(img)
-        st.image(img, channels="RGB")
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    # Release the camera and close the window
-    camera.release()
-    cv2.destroyAllWindows()
+        # Convert the frame back to RGB for Streamlit display
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        st.image(frame, channels="RGB")
 
 if __name__ == "__main__":
     read_qr_code_from_camera()
